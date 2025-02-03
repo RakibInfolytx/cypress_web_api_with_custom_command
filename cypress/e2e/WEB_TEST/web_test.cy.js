@@ -1,79 +1,103 @@
 /// <reference types="Cypress" />
-import LoginPage from "../../pages/LoginPage";
-import DashboardPage from "../../pages/DashboardPage";
 import account from "../../../storage/account.json";
 
-describe("UI quiz test - Valid user Test", () => {
+describe("UI quiz test- Valid user Test", () => {
   beforeEach(() => {
-    LoginPage.visit();
+    cy.visit("/");
+    cy.title().should("eq", "Document");
   });
 
-  it("- Verify navigating to the right URL", () => {
+it("- Verify navigating to the right URL", () => {
+  cy.get(".sc-bdVaJa > div").should("have.text", "qa.code-quiz.dev");
+});
+
+Object.keys(account).forEach((username) => {
+  const user = account[username];
+
+  it(`- Verify login for user: ${username}`, () => {
+    cy.validLogin(username, user.password);
+    cy.get(".sc-bdVaJa > div").should(
+      "have.text",
+      `Hello ${user.name || "undefined"}`
+    );
+  });
+
+  it(`- Verify dashboard for user: ${username}`, () => {
+    
+    cy.validLogin(username, user.password);
+
+    const displayName = user.name || username;
+
+    if (!user.name) {
+      cy.log(`Warning: User '${username}' has no name.`);
+    }
+    else{
+    cy.get(".sc-bwzfXH > :nth-child(1) > :nth-child(2)").should("have.text", `${displayName}`);
+    }
+
+    cy.get(".sc-bwzfXH > :nth-child(2) > :nth-child(2)").should("have.text", user.favouriteFruit);
+    cy.get(":nth-child(3) > :nth-child(2)").should("have.text", user.favouriteMovie);
+    cy.get(":nth-child(4) > :nth-child(2)").should("have.text", user.favouriteNumber
+
+    );
+  });
+
+  it(`- Verify logout for user: ${username}`, () => {
+    cy.validLogin(username, user.password);
+    cy.get(".sc-bxivhb").click();
     cy.get(".sc-bdVaJa > div").should("have.text", "qa.code-quiz.dev");
-  });
-
-  Object.keys(account).forEach((username) => {
-    const user = account[username];
-
-    it(`- Verify login for user: ${username}`, () => {
-      LoginPage.validLogin(username, user.password);
-      LoginPage.verifyLoginSuccess(user.name);
-    });
-
-    it(`- Verify dashboard for user: ${username}`, () => {
-      LoginPage.validLogin(username, user.password);
-      DashboardPage.verifyDashboard(user);
-    });
-
-    it(`- Verify logout for user: ${username}`, () => {
-      LoginPage.validLogin(username, user.password);
-      LoginPage.logout();
-      LoginPage.verifyLogout();
-    });
   });
 });
 
-describe("UI quiz test - Invalid user Test", () => {
+});
+
+describe("UI quiz test- Invalid user Test", () => {
   beforeEach(() => {
-    LoginPage.visit();
+    cy.visit("/");
+    cy.title().should("eq", "Document");
   });
 
   it("- Verify login with invalid username", () => {
-    LoginPage.invalidLogin("InvalidUser", "TopSecret1234!");
-    LoginPage.verifyLoginFailure();
+    cy.invalidLogin("InvalidUser", "TopSecret1234!");
+    cy.contains('qa.code-quiz.dev').should('exist');
+    cy.contains('If you do not have an account, contact an admin').should('exist');
+    
   });
 
   it("- Verify login with invalid password", () => {
-    LoginPage.invalidLogin("SomeUser_name", "WrongPassword");
-    LoginPage.verifyLoginFailure();
+    cy.invalidLogin("SomeUser_name", "WrongPassword");
+    cy.contains('If you do not have an account, contact an admin')
+    .should('exist');
   });
 
   it("- Verify login with empty username", () => {
-    LoginPage.enterPassword("TopSecret1234!");
-    LoginPage.clickLogin();
-    LoginPage.verifyLoginFailure();
+  
+    cy.get('[placeholder="password"]').clear().type("TopSecret1234!");
+    cy.get('button[class="sc-bZQynM cGmBje"]').trigger('keydown', { key: 'Enter' });
+    cy.contains('If you do not have an account, contact an admin').should('exist');
   });
 
   it("- Verify login with empty password", () => {
-    LoginPage.enterUsername("hh");
-    LoginPage.clickLogin();
-    LoginPage.verifyLoginFailure();
+   cy.get('[placeholder="Enter Username"]').clear().type('hh');
+   cy.get('button[class="sc-bZQynM cGmBje"]').trigger('keydown', { key: 'Enter' });
+   cy.contains('If you do not have an account, contact an admin').should('exist');
   });
 
   it("- Verify login with special characters in username", () => {
-    LoginPage.invalidLogin("!@#$%^&*()", "TopSecret1234!");
-    LoginPage.verifyLoginFailure();
+    cy.invalidLogin("!@#$%^&*()", "TopSecret1234!");
+    cy.contains('If you do not have an account, contact an admin').should('exist');
+    
   });
 
   it("- Verify login with very long username", () => {
     const longUsername = "a".repeat(256);
-    LoginPage.invalidLogin(longUsername, "TopSecret1234!");
-    LoginPage.verifyLoginFailure();
+    cy.invalidLogin(longUsername, "TopSecret1234!");
+    cy.contains('If you do not have an account, contact an admin').should('exist');
   });
 
   it("- Verify user is logged out automatically after logout", () => {
-    LoginPage.validLogin("SomeUser_name", account.SomeUser_name.password);
-    LoginPage.logout();
-    LoginPage.verifyLogout();
+    cy.validLogin("SomeUser_name", account.SomeUser_name.password);
+    cy.get(".sc-bxivhb").click();
+    cy.contains('If you do not have an account, contact an admin').should('exist');
   });
 });

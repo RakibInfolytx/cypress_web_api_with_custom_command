@@ -1,7 +1,7 @@
 # Web Functionality and API Funtionality Testing
 
 ### run test
-- clone repositor [git clone https://github.com/RakibInfolytx/cypress_web_api_with_custom_command.git]
+- clone repositor from github [https://github.com/RakibInfolytx/cypress_web_api_with_custom_command.git]
 - npm install [to install all dependencies]
 - npm install cypress --save-dev [install cypress if needed]
 - npm start [it will run both the server on PORT 9999 and project will open at http://localhost:8080/]
